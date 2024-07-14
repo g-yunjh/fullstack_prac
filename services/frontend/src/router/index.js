@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue';
 import RegisterView from '@/views/RegisterView.vue';
 import LoginView from '@/views/LoginView.vue';
 import DashboardView from '@/views/DashboardView.vue';
@@ -7,13 +6,14 @@ import ProfileView from '@/views/ProfileView.vue';
 import PostView from '@/views/PostView.vue';
 import EditPostView from '@/views/EditPostView.vue';
 import store from '@/store';
+import SearchView from '@/views/SearchView.vue';
 
 
 const routes = [
   {
     path: '/',
-    name: "Home",
-    component: HomeView,
+    name: "Login",
+    component: LoginView,
   },
   {
     path: '/register',
@@ -21,14 +21,15 @@ const routes = [
     component: RegisterView,
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: LoginView,
-  },
-  {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: SearchView,
     meta: { requiresAuth: true },
   },
   {
@@ -64,7 +65,7 @@ router.beforeEach((to, _, next) => {
       next();
       return;
     }
-    next('/login');
+    next('/');
   } else {
     next();
   }

@@ -1,7 +1,13 @@
 <template>
-    <div class="max-w-4xl mx-auto mt-8">
+    <div>
+      <img src="../assets/logo2.png" alt="logo" style="width: 50px; height: 50px;" />
+    </div>
+    <div>
+      <router-link to="/login" class="text-blue-500 hover:underline">Login</router-link>
+    </div>
+    <div class="max-w-4xl mx-auto">
       <section class="mb-8">
-        <h1 class="text-2xl font-bold mb-4">Add new post</h1>
+        <h1 class="text-2xl font-bold mb-4">Add psas post</h1>
         <hr class="mb-4"/>
     
         <form @submit.prevent="submit" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
@@ -47,7 +53,8 @@
   </template>
     
   <script>
-  import { defineComponent } from 'vue';
+  import router from '@/router';
+import { defineComponent } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   
   export default defineComponent({
