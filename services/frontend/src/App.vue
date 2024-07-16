@@ -18,7 +18,4 @@
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
 }
-.main {
-  padding-top: 5em;
-}
 </style>

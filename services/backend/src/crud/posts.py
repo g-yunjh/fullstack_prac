@@ -14,7 +14,7 @@ async def get_post(post_id) -> PostOutSchema:
     return await PostOutSchema.from_queryset_single(Posts.get(id=post_id))
 
 
-async def create_post(post, current_user) -> PostOutSchema:
+async def create_post(post, current_user, category) -> PostOutSchema:    
     post_dict = post.dict(exclude_unset=True)
     post_dict["author_id"] = current_user.id
     post_obj = await Posts.create(**post_dict)
