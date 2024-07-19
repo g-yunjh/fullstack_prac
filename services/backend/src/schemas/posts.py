@@ -18,3 +18,4 @@ PostOutSchema = pydantic_model_creator(
 class UpdatePost(BaseModel):
     title: Optional[str]
     content: Optional[str]
+    category: Optional[str]

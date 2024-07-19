@@ -1,49 +1,96 @@
-from fastapi import HTTPException
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
+from tortoise.contrib.fastapi import HTTPNotFoundError
 from tortoise.exceptions import DoesNotExist
 
-from src.database.models import Posts
-from src.schemas.posts import PostOutSchema
+import src.crud.posts as crud
+from src.auth.jwthandler import get_current_user
+from src.schemas.posts import PostOutSchema, PostInSchema, UpdatePost
 from src.schemas.token import Status
+from src.schemas.users import UserOutSchema
 
 
+router = APIRouter()
+
+@router.get(
+    "/posts",
+    response_model=List[PostOutSchema],
+    dependencies=[Depends(get_current_user)],
+)
 async def get_posts():
-    return await PostOutSchema.from_queryset(Posts.all())
+    return await crud.get_posts()
 
-
-async def get_post(post_id) -> PostOutSchema:
-    return await PostOutSchema.from_queryset_single(Posts.get(id=post_id))
-
-
-async def create_post(post, current_user, category) -> PostOutSchema:    
-    post_dict = post.dict(exclude_unset=True)
-    post_dict["author_id"] = current_user.id
-    post_obj = await Posts.create(**post_dict)
-    return await PostOutSchema.from_tortoise_orm(post_obj)
-
-
-async def update_post(post_id, post, current_user) -> PostOutSchema:
+@router.get(
+    "/posts/{category}",
+    response_model=List[PostOutSchema],
+    dependencies=[Depends(get_current_user)],
+)
+async def get_posts_by_category(category: str) -> List[PostOutSchema]:
     try:
-        db_post = await PostOutSchema.from_queryset_single(Posts.get(id=post_id))
+        return await crud.get_posts_by_category(category)
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Category does not exist",
+        )
 
-    if db_post.author.id == current_user.id:
-        await Posts.filter(id=post_id).update(**post.dict(exclude_unset=True))
-        return await PostOutSchema.from_queryset_single(Posts.get(id=post_id))
-
-    raise HTTPException(status_code=403, detail=f"Not authorized to update")
-
-
-async def delete_post(post_id, current_user) -> Status:
+@router.get(
+    "/post/{post_id}",
+    response_model=PostOutSchema,
+    dependencies=[Depends(get_current_user)],
+)
+async def get_post(post_id: int) -> PostOutSchema:
     try:
-        db_post = await PostOutSchema.from_queryset_single(Posts.get(id=post_id))
+        return await crud.get_post(post_id)
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Post does not exist",
+        )
 
-    if db_post.author.id == current_user.id:
-        deleted_count = await Posts.filter(id=post_id).delete()
-        if not deleted_count:
-            raise HTTPException(status_code=404, detail=f"Post {post_id} not found")
-        return Status(message=f"Deleted post {post_id}")
+@router.get(
+    "/post/{category}/{post_id}",
+    response_model=PostOutSchema,
+    dependencies=[Depends(get_current_user)],
+)
+async def get_post_by_category_and_id(category: str, post_id: int) -> PostOutSchema:
+    try:
+        return await crud.get_post_by_category_and_id(category, post_id)
+    except DoesNotExist:
+        raise HTTPException(
+            status_code=404,
+            detail="Post does not exist",
+        )
 
-    raise HTTPException(status_code=403, detail=f"Not authorized to delete")
+@router.post(
+    "/posts", response_model=PostOutSchema, dependencies=[Depends(get_current_user)]
+)
+async def create_post(
+    post: PostInSchema, current_user: UserOutSchema = Depends(get_current_user)
+) -> PostOutSchema:
+    return await crud.create_post(post, current_user)
+
+@router.patch(
+    "/post/{post_id}",
+    dependencies=[Depends(get_current_user)],
+    response_model=PostOutSchema,
+    responses={404: {"model": HTTPNotFoundError}},
+)
+async def update_post(
+    post_id: int,
+    post: UpdatePost,
+    current_user: UserOutSchema = Depends(get_current_user)
+) -> PostOutSchema:
+    return await crud.update_post(post_id, post, current_user)
+
+@router.delete(
+    "/post/{post_id}",
+    response_model=Status,
+    responses={404: {"model": HTTPNotFoundError}},
+    dependencies=[Depends(get_current_user)],
+)
+async def delete_post(
+    post_id: int, current_user: UserOutSchema = Depends(get_current_user)
+):
+    return await crud.delete_post(post_id, current_user)

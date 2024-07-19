@@ -15,6 +15,7 @@ class Posts(models.Model):
     title = fields.CharField(max_length=225)
     content = fields.TextField()
     author = fields.ForeignKeyField("models.Users", related_name="post")
+    category = fields.CharField(max_length=50)  # Add the category field
     created_at = fields.DatetimeField(auto_now_add=True)
     modified_at = fields.DatetimeField(auto_now=True)
 
